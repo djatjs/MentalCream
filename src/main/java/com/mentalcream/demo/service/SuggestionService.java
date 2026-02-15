@@ -50,15 +50,18 @@ public class SuggestionService {
             return saveAndConvert(recovery);
         }
 
-        // 2. 에너지 기반 필터링
+        // 2. 에너지 기반 카테고리 우선순위 결정
         double energyAvg = calculateRecentEnergyAvg(yesterday);
-        if (energyAvg <= 2) {
-            return saveAndConvert(createLifeSuggestionForLowEnergy(forDate));
-        }
+        Category targetCategory;
 
-        // 3. 개인화 패턴 분석
-        Category targetCategory = analyzer.findBestEnergyBoostingCategory(yesterday);
-        if (targetCategory == null) targetCategory = findMostFrequentCategory(yesterday);
+        if (energyAvg <= 2) {
+            // 에너지가 매우 낮을 때는 강제로 LIFE(일상/회복) 카테고리로 고정하여 AI가 무리한 제안을 하지 않도록 함
+            targetCategory = Category.LIFE;
+        } else {
+            // 3. 개인화 패턴 분석
+            targetCategory = analyzer.findBestEnergyBoostingCategory(yesterday);
+            if (targetCategory == null) targetCategory = findMostFrequentCategory(yesterday);
+        }
 
         // 4. 추천 반복 제한 정책
         targetCategory = policyEngine.filterRepetition(targetCategory, forDate);
