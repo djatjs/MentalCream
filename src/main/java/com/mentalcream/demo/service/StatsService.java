@@ -45,11 +45,28 @@ public class StatsService {
                 .average()
                 .orElse(0.0);
 
+        List<WeeklyStatsResponse.DailyTrend> trends = weekStart.datesUntil(weekEnd.plusDays(1))
+                .map(date -> {
+                    Integer energy = logs.stream()
+                            .filter(l -> l.getLogDate().equals(date))
+                            .map(DailyLog::getEnergy)
+                            .findFirst().orElse(null);
+                    long doneCount = items.stream()
+                            .filter(i -> i.getDailyLog().getLogDate().equals(date))
+                            .count();
+                    return WeeklyStatsResponse.DailyTrend.builder()
+                            .date(date)
+                            .energy(energy)
+                            .doneCount(doneCount)
+                            .build();
+                }).collect(Collectors.toList());
+
         return WeeklyStatsResponse.builder()
                 .totalDoneCount(totalDoneCount)
                 .categoryCount(categoryCount)
                 .avgMood(avgMood)
                 .avgEnergy(avgEnergy)
+                .trends(trends)
                 .build();
     }
 }

@@ -48,6 +48,10 @@ public class GamificationService {
 
     public String getMentalMode(LocalDate date) {
         int score = recoveryIndexCalculator.calculateIndex(date.minusDays(7));
+        return getMentalModeByScore(score);
+    }
+
+    public String getMentalModeByScore(int score) {
         if (score >= 80) return "🔥 가속 모드";
         if (score >= 60) return "🔄 유지 모드";
         if (score >= 40) return "🌱 회복 모드";

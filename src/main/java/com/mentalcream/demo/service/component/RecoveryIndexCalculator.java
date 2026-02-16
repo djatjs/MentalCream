@@ -25,20 +25,33 @@ public class RecoveryIndexCalculator {
         List<DailyLog> logs = dailyLogRepository.findByLogDateBetween(weekStart, weekEnd);
         List<DoneItem> items = doneItemRepository.findByDailyLog_LogDateBetween(weekStart, weekEnd);
 
-        long totalDoneCount = items.size();
-        double avgEnergy = logs.stream()
-                .filter(l -> l.getEnergy() != null)
+        // 1. 활동 질 점수 (카테고리 가중치)
+        double qualityScore = items.stream().mapToDouble(item -> switch (item.getCategory()) {
+            case PROJECT -> 3.0;
+            case STUDY -> 2.0;
+            case RUN -> 1.5;
+            case LIFE -> 1.0;
+        }).sum();
+
+        // 2. 에너지 추세 분석 (전반부 vs 후반부)
+        double firstHalfAvg = logs.stream()
+                .filter(l -> !l.getLogDate().isAfter(weekStart.plusDays(2)))
                 .mapToInt(DailyLog::getEnergy)
-                .average().orElse(0.0);
+                .average().orElse(5.0);
         
-        long activeDays = logs.size();
-        long zeroDayCount = 7 - activeDays; // 기록이 없는 날 포함
+        double secondHalfAvg = logs.stream()
+                .filter(l -> l.getLogDate().isAfter(weekStart.plusDays(2)))
+                .mapToInt(DailyLog::getEnergy)
+                .average().orElse(firstHalfAvg);
 
-        int baseScore = (int) (totalDoneCount * 5);
-        int energyScore = (int) (avgEnergy * 10);
-        int penalty = (int) (zeroDayCount * 10);
+        double trendBonus = (secondHalfAvg >= firstHalfAvg) ? 15 : 0;
+        
+        // 3. 최종 점수 산출
+        int baseScore = (int) (qualityScore * 3);
+        int energyScore = (int) (secondHalfAvg * 12); // 5점 만점 기준 (최대 60점)
+        long penalty = (7 - logs.size()) * 12; // 미기록 페널티 강화
 
-        int index = baseScore + energyScore - penalty;
+        int index = (int) (baseScore + energyScore + trendBonus - penalty);
         return Math.max(0, Math.min(100, index));
     }
 

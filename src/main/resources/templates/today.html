@@ -191,12 +191,29 @@
                 <button id="themeToggle" style="background:none; border:none; cursor:pointer; font-size:1.3rem;">🌓</button>
                 <div class="tooltip tooltip-left">
                     <span class="badge" th:text="${today.mentalMode}" style="cursor:help; padding: 6px 14px; border-radius: 50px;">🌱 회복 모드</span>
-                    <div class="tooltip-text">
-                        <b>현재 멘탈 모드</b>
-                        <p style="font-size: 0.75rem; margin-bottom: 10px;">최근 7일 데이터를 분석한 심리 기상도입니다.</p>
-                        <div th:each="m : ${#lists.toList({'🧊 냉각','🌱 회복','🔄 유지','🔥 가속'})}" 
-                             class="stage-item" th:classappend="${#strings.contains(today.mentalMode, #strings.substring(m,2)) ? 'active' : ''}" 
-                             th:text="${m}" style="padding: 4px 0;"></div>
+                    <div class="tooltip-text" style="width: 280px;">
+                        <b style="display: block; margin-bottom: 8px;">💡 멘탈 모드 분석 기준</b>
+                        <p style="font-size: 0.7rem; margin-bottom: 12px; color: var(--text-label);">최근 7일간의 에너지 추세와 활동의 질을 분석한 결과입니다.</p>
+                        
+                        <div style="display: grid; gap: 8px; font-size: 0.75rem;">
+                            <div th:classappend="${#strings.contains(today.mentalMode, '가속')} ? 'active' : ''" class="stage-item">
+                                <span style="font-weight: 700; color: #4db6ac;">🔥 가속 (80+)</span>: 에너지 상승세 + 도전 활동 비중 높음
+                            </div>
+                            <div th:classappend="${#strings.contains(today.mentalMode, '유지')} ? 'active' : ''" class="stage-item">
+                                <span style="font-weight: 700;">🔄 유지 (60+)</span>: 안정적인 에너지와 꾸준한 활동
+                            </div>
+                            <div th:classappend="${#strings.contains(today.mentalMode, '회복')} ? 'active' : ''" class="stage-item">
+                                <span style="font-weight: 700;">🌱 회복 (40+)</span>: 균형을 찾아가는 에너지 충전 단계
+                            </div>
+                            <div th:classappend="${#strings.contains(today.mentalMode, '냉각')} ? 'active' : ''" class="stage-item">
+                                <span style="font-weight: 700; color: #aeaeae;">🧊 냉각 (40미만)</span>: 기록 부족 또는 에너지 정체 상태
+                            </div>
+                        </div>
+                        
+                        <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 12px 0;">
+                        <p style="font-size: 0.7rem; color: var(--peach); line-height: 1.4;">
+                            ✨ <b>Tip</b>: 최근 3일 에너지가 상승 곡선을 그리거나, STUDY/PROJECT 활동이 많으면 점수가 크게 상승합니다!
+                        </p>
                     </div>
                 </div>
                 <a href="/stats" style="color: var(--mint); text-decoration: none; font-size: 1.1rem;">📊</a>

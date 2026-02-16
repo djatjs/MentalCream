@@ -20,6 +20,7 @@ public class StatsController {
 
     private final StatsService statsService;
     private final RecoveryIndexCalculator recoveryIndexCalculator;
+    private final com.mentalcream.demo.service.GamificationService gamificationService;
 
     @GetMapping("/weekly")
     public WeeklyStatsResponse getWeeklyStats(
@@ -34,6 +35,7 @@ public class StatsController {
         return RecoveryIndexResponse.builder()
                 .score(score)
                 .status(recoveryIndexCalculator.getStatus(score))
+                .mentalMode(gamificationService.getMentalModeByScore(score))
                 .build();
     }
 }
