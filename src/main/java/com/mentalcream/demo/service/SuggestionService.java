@@ -128,6 +128,8 @@ public class SuggestionService {
     private SuggestionDto saveAndConvert(Suggestion s) {
         Suggestion saved = suggestionRepository.save(s);
         return SuggestionDto.builder()
+                .id(saved.getId())
+                .logDate(saved.getLogDate())
                 .category(saved.getCategory().name())
                 .title(saved.getTitle())
                 .minutes(saved.getMinutes())

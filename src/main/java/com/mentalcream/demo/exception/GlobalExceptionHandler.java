@@ -17,7 +17,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGlobalException(Exception ex, WebRequest request) {
-        return new ResponseEntity<>(Map.of("message", "An unexpected error occurred"), HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<?> handleGlobalException(Exception ex, org.springframework.web.context.request.WebRequest request) {
+        ex.printStackTrace(); // 콘솔에 에러 내용을 출력합니다.
+        return new ResponseEntity<>(java.util.Map.of("message", "An unexpected error occurred: " + ex.getMessage()), org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

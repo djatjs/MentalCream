@@ -17,11 +17,14 @@ import java.time.LocalDateTime;
 public class Suggestion {
 
     @Id
-    @Column(name = "log_date")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "log_date", nullable = false)
     private LocalDate logDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private Category category;
 
     @Column(length = 120, nullable = false)

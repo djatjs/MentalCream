@@ -39,13 +39,15 @@ public class TodayService {
     public TodayResponse getTodayScreen(LocalDate date) {
         DailyLog dailyLog = dailyLogRepository.findByLogDate(date).orElse(null);
         List<DoneItem> doneItems = dailyLog != null ? dailyLog.getDoneItems() : List.of();
-        Suggestion suggestion = suggestionRepository.findById(date.plusDays(1)).orElse(null);
+        Suggestion suggestion = suggestionRepository.findByLogDate(date.plusDays(1)).orElse(null);
 
         return TodayResponse.builder()
                 .todayDate(date)
                 .dailyLog(dailyLog != null ? DailyLogDto.fromEntity(dailyLog) : null)
                 .doneItems(doneItems.stream().map(DoneItemDto::fromEntity).collect(Collectors.toList()))
                 .tomorrowSuggestion(suggestion != null ? SuggestionDto.builder()
+                        .id(suggestion.getId())
+                        .logDate(suggestion.getLogDate())
                         .category(suggestion.getCategory().name())
                         .title(suggestion.getTitle())
                         .minutes(suggestion.getMinutes())

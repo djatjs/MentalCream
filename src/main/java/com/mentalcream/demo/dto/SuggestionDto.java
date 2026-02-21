@@ -7,6 +7,8 @@ import lombok.Getter;
 @Getter
 @Builder
 public class SuggestionDto {
+    private Long id;
+    private java.time.LocalDate logDate;
     private String category;
     private String title;
     private Integer minutes;

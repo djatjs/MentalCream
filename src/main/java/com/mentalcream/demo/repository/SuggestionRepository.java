@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface SuggestionRepository extends JpaRepository<Suggestion, LocalDate> {
-    List<Suggestion> findTop3ByLogDateBeforeOrderByLogDateDesc(LocalDate date);
+public interface SuggestionRepository extends JpaRepository<Suggestion, Long> {
+    java.util.Optional<Suggestion> findByLogDate(java.time.LocalDate logDate);
+    List<Suggestion> findTop3ByLogDateBeforeOrderByLogDateDesc(java.time.LocalDate date);
 }

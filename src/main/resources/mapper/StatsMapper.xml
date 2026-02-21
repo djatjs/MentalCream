@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mentalcream.demo.repository.StatsMapper">
+
+    <select id="calculateRecoveryMetrics" resultType="map">
+        SELECT
+            (SELECT NVL(SUM(CASE category
+                                WHEN 'PROJECT' THEN 3.0
+                                WHEN 'STUDY' THEN 2.0
+                                WHEN 'RUN' THEN 1.5
+                                WHEN 'LIFE' THEN 1.0
+                                ELSE 0 END), 0) 
+             FROM done_item 
+             WHERE log_date BETWEEN #{weekStart} AND #{weekEnd}) AS quality_score,
+            (SELECT NVL(AVG(energy), 5.0) FROM daily_log WHERE log_date BETWEEN #{weekStart} AND #{weekStart} + 2) AS first_half_avg,
+            (SELECT NVL(AVG(energy), 5.0) FROM daily_log WHERE log_date BETWEEN #{weekStart} + 3 AND #{weekEnd}) AS second_half_avg,
+            (SELECT COUNT(*) FROM daily_log WHERE log_date BETWEEN #{weekStart} AND #{weekEnd}) AS log_count
+        FROM DUAL
+    </select>
+
+</mapper>

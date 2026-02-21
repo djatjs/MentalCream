@@ -24,7 +24,7 @@ public class DoneItem {
     private DailyLog dailyLog;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private Category category;
 
     @Column(length = 120, nullable = false)

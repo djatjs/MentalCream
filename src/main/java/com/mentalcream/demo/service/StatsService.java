@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,16 +32,17 @@ public class StatsService {
         long totalDoneCount = items.size();
 
         Map<String, Long> categoryCount = items.stream()
+                .filter(item -> item.getCategory() != null)
                 .collect(Collectors.groupingBy(item -> item.getCategory().name(), Collectors.counting()));
 
         double avgMood = logs.stream()
-                .filter(log -> log.getMood() != null)
+                .filter(log -> log != null && log.getMood() != null)
                 .mapToInt(DailyLog::getMood)
                 .average()
                 .orElse(0.0);
 
         double avgEnergy = logs.stream()
-                .filter(log -> log.getEnergy() != null)
+                .filter(log -> log != null && log.getEnergy() != null)
                 .mapToInt(DailyLog::getEnergy)
                 .average()
                 .orElse(0.0);
@@ -48,11 +50,12 @@ public class StatsService {
         List<WeeklyStatsResponse.DailyTrend> trends = weekStart.datesUntil(weekEnd.plusDays(1))
                 .map(date -> {
                     Integer energy = logs.stream()
-                            .filter(l -> l.getLogDate().equals(date))
+                            .filter(l -> l != null && date.equals(l.getLogDate()))
                             .map(DailyLog::getEnergy)
+                            .filter(Objects::nonNull) // null인 에너지는 스트림에서 제외하여 findFirst()의 NPE 방지
                             .findFirst().orElse(null);
                     long doneCount = items.stream()
-                            .filter(i -> i.getDailyLog().getLogDate().equals(date))
+                            .filter(i -> i != null && i.getDailyLog() != null && date.equals(i.getDailyLog().getLogDate()))
                             .count();
                     return WeeklyStatsResponse.DailyTrend.builder()
                             .date(date)

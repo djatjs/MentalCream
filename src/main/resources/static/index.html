@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>멘탈크림 - REST API Ver.</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: radial-gradient(circle at top left, #fdfbf7, #f3ece4);
+            --mint: #1a8a7e;
+            --mint-light: #e8f3f1;
+            --peach: #ff9a8b;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-main: #1d1d1f;
+            --text-label: #6e6e73;
+            --text-sub: #aeaeae;
+            --shadow: 0 12px 30px rgba(0, 0, 0, 0.04);
+            --border-color: rgba(0, 0, 0, 0.05);
+            --input-bg: #f5f5f7;
+            --ai-sidebar: #a8d5cf;
+            --font-main: 'Pretendard', sans-serif;
+        }
+
+        body.dark-mode {
+            --bg-gradient: radial-gradient(circle at top left, #121214, #0a0a0c);
+            --mint: #4db6ac;
+            --mint-light: rgba(77, 182, 172, 0.15);
+            --peach: #ffab91;
+            --card-bg: rgba(30, 30, 34, 0.9);
+            --text-main: #efeff4;
+            --text-label: #98989d;
+            --text-sub: #48484a;
+            --shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --input-bg: #1c1c1e;
+            --ai-sidebar: #1a3d3a;
+        }
+
+        body { 
+            font-family: var(--font-main); background: var(--bg-gradient);
+            background-attachment: fixed; color: var(--text-main);
+            margin: 0; padding: 40px 20px; min-height: 100vh;
+            letter-spacing: -0.02em; transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 2.6rem; color: var(--mint); margin: 0; font-weight: 800; letter-spacing: -0.04em; }
+        .motto { background: var(--peach); color: white; padding: 5px 18px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; display: inline-block; margin-top: 12px; box-shadow: 0 4px 12px rgba(255, 171, 145, 0.3); }
+
+        .date-nav { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 15px 0; }
+        .date-nav button { background: none; color: var(--text-sub); border: none; cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
+        .date-nav button:hover { color: var(--mint); transform: scale(1.2); }
+        .date-display { font-weight: 700; font-size: 1.2rem; color: var(--text-main); cursor: pointer; padding: 4px 12px; border-radius: 12px; transition: background 0.2s; }
+        .date-display:hover { background: var(--mint-light); color: var(--mint); }
+
+        .dashboard {
+            display: flex; justify-content: space-between; align-items: center; 
+            margin: 30px 0 15px; background: var(--card-bg); padding: 16px 32px; 
+            border-radius: 28px; width: 100%; box-sizing: border-box; 
+            border: 1px solid var(--border-color); position: relative; z-index: 999;
+            box-shadow: var(--shadow);
+        }
+
+        .card { 
+            background: var(--card-bg); border-radius: 32px; padding: 28px; 
+            box-shadow: var(--shadow); border: 1px solid var(--border-color);
+            transition: transform 0.3s, background 0.4s;
+        }
+        .card:hover { transform: translateY(-5px); }
+        h2 { font-size: 1.1rem; font-weight: 700; margin-top: 0; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        label { font-size: 0.85rem; font-weight: 600; color: var(--text-label); display: block; margin-bottom: 10px; }
+        input, select, textarea { 
+            font-family: var(--font-main); width: 100%; padding: 14px 18px; 
+            border: 1.5px solid var(--border-color); border-radius: 16px; background: var(--input-bg); 
+            color: var(--text-main); font-size: 0.9rem; transition: all 0.25s; box-sizing: border-box;
+        }
+
+        .primary-btn { 
+            background: var(--mint); color: white; border: none; padding: 15px; 
+            border-radius: 18px; font-weight: 700; font-size: 0.95rem; cursor: pointer; width: 100%;
+            transition: 0.3s;
+        }
+        .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px var(--mint-light); }
+
+        /* Tooltip */
+        .tooltip { position: relative;}
+        .tooltip .tooltip-text {
+            visibility: hidden; width: 260px; background-color: rgba(44, 44, 46, 0.98); 
+            backdrop-filter: blur(12px); color: #fff; text-align: left; border-radius: 20px; 
+            padding: 20px; position: absolute; z-index: 9999; opacity: 0; 
+            transition: all 0.3s; font-size: 0.85rem; line-height: 1.6;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4); pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+        .stage-item { font-size: 0.8rem; padding: 4px 0; color: #fff; opacity: 0.6; }
+        .stage-item.active { color: var(--peach); font-weight: 800; opacity: 1; }
+
+        .suggestion-section { display: grid; grid-template-columns: 240px 1fr; background: var(--card-bg); border-radius: 36px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+        .suggest-left { background: var(--ai-sidebar); padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--mint); transition: background 0.4s; }
+        .suggest-right { padding: 40px; }
+        .done-item { display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); padding: 14px 18px; border-radius: 18px; margin-bottom: 10px; border: 1px solid var(--border-color); }
+        .badge { background: var(--mint); color: white; padding: 4px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; }
+        .btn-del { color: var(--text-sub); border: none; background: rgba(0,0,0,0.03); cursor: pointer; width: 28px; height: 28px; border-radius: 50%; }
+
+        @media (max-width: 900px) { .suggestion-section { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="header">
+        <h1>Mental Cream</h1>
+        <div class="date-nav">
+            <button onclick="changeDate(-1)">&lt;</button>
+            <div style="position: relative;">
+                <div id="dateDisplay" class="date-display" onclick="document.getElementById('datePicker').showPicker()">
+                    📅 <span>2026-02-20</span>
+                </div>
+                <input type="date" id="datePicker" style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;" onchange="setDate(this.value)">
+            </div>
+            <button onclick="changeDate(1)">&gt;</button>
+        </div>
+        <div class="motto">마음에 바르는 보습제</div>
+
+        <div class="dashboard" id="dashboard">
+            <!-- Loading state -->
+            <div style="text-align: center; width: 100%; color: var(--text-sub);">대시보드 데이터를 불러오는 중...</div>
+        </div>
+    </header>
+
+    <div style="display: grid; grid-template-columns: 1.1fr 1.1fr 0.8fr; gap: 24px; margin-bottom: 24px;">
+        <section class="card" style="grid-column: span 2;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin:0;">🧘 오늘 나의 밸런스 체크</h2>
+                <div id="syncStatus" style="font-size: 0.75rem; color: var(--text-label); opacity: 0.6;">REST API 모드</div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div style="border-right: 1px solid var(--border-color); padding-right: 30px;">
+                    <label>기분과 에너지 (1-5)</label>
+                    <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                        <div style="flex:1; text-align: center;">
+                            <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;" id="moodEmoji">😐</span>
+                            <input type="number" id="mood" min="1" max="5" value="3" oninput="updateEmoji()">
+                        </div>
+                        <div style="flex:1; text-align: center;">
+                            <span style="font-size: 1.5rem; display: block; margin-bottom: 5px;">⚡</span>
+                            <input type="number" id="energy" min="1" max="5" value="3">
+                        </div>
+                    </div>
+                    <label>한 줄 메모</label>
+                    <textarea id="note" rows="3" placeholder="지금 내 마음의 날씨는?"></textarea>
+                </div>
+                <div>
+                    <label>🌪️ 고민 덜어내기</label>
+                    <input type="text" id="worryText" placeholder="나를 괴롭히는 생각 한 줄" style="margin-bottom: 20px;">
+                    <label>고민의 무게: <span id="worryVal" style="color: var(--peach); font-weight: 800;">0</span></label>
+                    <input type="range" id="worryIntensity" min="0" max="5" step="1" value="0" oninput="document.getElementById('worryVal').innerText = this.value">
+                    <button class="primary-btn" style="margin-top: 30px;" onclick="syncMentalData()">오늘의 마음 동기화하기</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>✅ 성취 기록</h2>
+            <div class="form-group">
+                <label>카테고리</label>
+                <select id="itemCategory">
+                    <option value="STUDY">STUDY</option>
+                    <option value="RUN">RUN</option>
+                    <option value="PROJECT">PROJECT</option>
+                    <option value="LIFE">LIFE</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>무엇을 해냈나요?</label>
+                <textarea id="itemTitle" placeholder="기록 추가..." style="height: 120px;"></textarea>
+            </div>
+            <button id="addDoneBtn" class="primary-btn" onclick="addDoneItem()" style="background: var(--text-main); color: var(--card-bg);">기록 추가</button>
+        </section>
+    </div>
+
+    <main class="suggestion-section">
+        <aside class="suggest-left">
+            <div style="background: white; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 20px; font-size: 1.8rem; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">🧴</div>
+            <h3 style="margin-top: 20px; font-size: 1rem; font-weight: 800;">AI 보습 루틴</h3>
+            <p style="font-size: 0.8rem; text-align: center; opacity: 0.8;">마음 장벽 강화</p>
+        </aside>
+        <section class="suggest-right">
+            <div id="suggestionArea"></div>
+            <h4 style="font-size: 0.9rem; margin-bottom: 20px; color: var(--text-label); text-transform: uppercase;">성취 리스트</h4>
+            <div id="doneListArea"></div>
+        </section>
+    </main>
+
+    <div style="margin-top: 40px; text-align: center;">
+        <button id="suggestBtn" onclick="generateSuggestion()" style="background: none; border: 2px solid var(--mint); color: var(--mint); padding: 12px 40px; border-radius: 50px; font-weight: 700; cursor:pointer;">✨ 내일의 보습 솔루션 받기</button>
+    </div>
+</div>
+
+<a href="/swagger-ui.html" style="position: fixed; bottom: 20px; right: 20px; background: #e67e22; color: white; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-size: 0.8rem; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">API DOCS</a>
+
+<script>
+    let currentServerDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD 안전하게 가져오기
+
+    async function loadData() {
+        document.getElementById('dateDisplay').querySelector('span').innerText = currentServerDate;
+        document.getElementById('datePicker').value = currentServerDate;
+
+        const res = await fetch(`/api/today?date=${currentServerDate}`);
+        const data = await res.json();
+        
+        renderDashboard(data);
+        renderForm(data);
+        renderSuggestion(data);
+        renderDoneList(data);
+        updateEmoji();
+    }
+
+    function renderDashboard(data) {
+        const lv = data.levelInfo;
+        const worryColor = data.worryReductionRate > 0 ? 'var(--peach)' : (data.worryReductionRate < 0 ? 'var(--mint)' : 'var(--text-sub)');
+        const arrow = data.worryReductionRate > 0 ? '↓' : (data.worryReductionRate < 0 ? '↑' : '-');
+
+        document.getElementById('dashboard').innerHTML = `
+            <div class="tooltip" style="display: flex; align-items: center; gap: 15px;">
+                <div style="font-size: 1rem; font-weight: 900; color: var(--mint);">LV.${lv.level} <span style="color: var(--peach);">🔥 ${data.streakDays}D</span></div>
+                <div style="width: 120px; height: 8px; background: rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden;">
+                    <div style="width:${lv.progressPercent}%; height:100%; background:var(--mint); transition:0.8s;"></div>
+                </div>
+                <div class="tooltip-text" style="top: 100%; left: 0; margin-top: 10px;">
+                    <b>성취 레벨 시스템</b>
+                    <p style="font-size: 0.75rem;">기록은 성장의 밑거름입니다. (현재 ${lv.currentXp} XP)</p>
+                    <div class="stage-item ${lv.level==1?'active':''}">Lv1. 회복자</div>
+                    <div class="stage-item ${lv.level==2?'active':''}">Lv2. 유지자</div>
+                    <div class="stage-item ${lv.level==3?'active':''}">Lv3. 전진자</div>
+                    <div class="stage-item ${lv.level==4?'active':''}">Lv4. 흐름장인</div>
+                    <div class="stage-item ${lv.level==5?'active':''}">Lv5. 멘탈관리자</div>
+                </div>
+            </div>
+            <div class="tooltip" style="text-align: center; border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 0 30px;">
+                <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-label);">고민 회복 추이</div>
+                <div style="font-size: 1.2rem; font-weight: 900; color: ${worryColor}">${Math.abs(data.worryReductionRate).toFixed(1)} ${arrow}</div>
+                <div class="tooltip-text" style="top: 100%; left: -50px; margin-top: 10px;">
+                    <b>고민 회복 추이</b><br>최근 14일간 고민 변화량입니다.
+                </div>
+            </div>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <button onclick="toggleTheme()" style="background:none; border:none; cursor:pointer; font-size:1.3rem;">🌓</button>
+                <div class="tooltip">
+                    <span class="badge" style="padding: 6px 14px; border-radius: 50px;">${data.mentalMode}</span>
+                    <div class="tooltip-text" style="top: 100%; right: 0; margin-top: 10px; width: 280px;">
+                        <b>멘탈 모드 분석</b>
+                        <div style="font-size: 0.75rem; margin-top: 10px;">
+                            <div class="${data.mentalMode.includes('가속')?'active':''}">🔥 가속: 에너지 상승세</div>
+                            <div class="${data.mentalMode.includes('유지')?'active':''}">🔄 유지: 안정적인 흐름</div>
+                            <div class="${data.mentalMode.includes('회복')?'active':''}">🌱 회복: 균형 찾는 중</div>
+                            <div class="${data.mentalMode.includes('냉각')?'active':''}">🧊 냉각: 기록 부족 상태</div>
+                        </div>
+                    </div>
+                </div>
+                <a href="/stats-view" style="color: var(--mint); text-decoration: none; font-size: 1.1rem;">📊</a>
+            </div>
+        `;
+    }
+
+    function renderForm(data) {
+        const log = data.dailyLog || {};
+        document.getElementById('mood').value = log.mood || 3;
+        document.getElementById('energy').value = log.energy || 3;
+        document.getElementById('note').value = log.note || "";
+        document.getElementById('worryText').value = log.worryText || "";
+        document.getElementById('worryIntensity').value = log.worryIntensity || 0;
+        document.getElementById('worryVal').innerText = log.worryIntensity || 0;
+    }
+
+    function renderSuggestion(data) {
+        const area = document.getElementById('suggestionArea');
+        if (data.tomorrowSuggestion) {
+            area.innerHTML = `
+                <div style="margin-bottom: 30px; background: var(--mint-light); padding: 30px; border-radius: 28px; border: 1px solid var(--mint-light);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <span class="badge" style="background: var(--peach);">오늘의 보습제</span>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--mint);">분석 신뢰도 ${data.tomorrowSuggestion.confidenceScore}%</div>
+                    </div>
+                    <p style="margin: 10px 0; font-size: 1.2rem; font-weight: 800;">"${data.tomorrowSuggestion.title}"</p>
+                    <p style="margin: 0; font-size: 1rem; color: var(--text-label); line-height: 1.7;">${data.tomorrowSuggestion.reason}</p>
+                </div>
+            `;
+        } else {
+            area.innerHTML = `<div style="color: var(--text-sub); text-align: center; padding: 20px; font-size: 0.9rem;">내일의 솔루션을 생성해 보세요 🌱</div>`;
+        }
+    }
+
+    function renderDoneList(data) {
+        const area = document.getElementById('doneListArea');
+        area.innerHTML = data.doneItems.map(item => `
+            <div class="done-item">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="badge">${item.category}</span>
+                    <span>${item.title}</span>
+                </div>
+                <button class="btn-del" onclick="deleteItem(${item.id})">✕</button>
+            </div>
+        `).join('') || `<div style="color: var(--text-sub); text-align: center; padding: 30px; font-size: 0.9rem;">오늘 해낸 일이 여기에 기록됩니다 🌱</div>`;
+    }
+
+    async function syncMentalData() {
+        const data = {
+            mood: parseInt(document.getElementById('mood').value),
+            energy: parseInt(document.getElementById('energy').value),
+            note: document.getElementById('note').value,
+            worryText: document.getElementById('worryText').value,
+            worryIntensity: parseInt(document.getElementById('worryIntensity').value)
+        };
+        const status = document.getElementById('syncStatus');
+        status.innerText = '⌛ 동기화 중...';
+        await fetch(`/api/today?date=${currentServerDate}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        status.innerText = '✅ 동기화 완료';
+        setTimeout(() => loadData(), 500);
+    }
+
+    async function addDoneItem() {
+        const title = document.getElementById('itemTitle').value;
+        if (!title) return alert("내용을 입력해주세요.");
+        
+        const data = {
+            category: document.getElementById('itemCategory').value,
+            title: title,
+            minutes: 0, intensity: 1
+        };
+        const btn = document.getElementById('addDoneBtn');
+        btn.innerText = "⏳";
+        await fetch(`/api/today/done?date=${currentServerDate}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        document.getElementById('itemTitle').value = "";
+        btn.innerText = "기록 추가";
+        loadData();
+    }
+
+    async function deleteItem(id) {
+        if (confirm("삭제하시겠습니까?")) {
+            await fetch(`/api/today/done/${id}`, { method: 'DELETE' });
+            loadData();
+        }
+    }
+
+    async function generateSuggestion() {
+        const btn = document.getElementById('suggestBtn');
+        btn.innerText = "✨ AI 분석 중...";
+        btn.disabled = true;
+
+        const d = new Date(currentServerDate);
+        d.setDate(d.getDate() + 1);
+        const forDate = d.toISOString().split('T')[0];
+
+        try {
+            const res = await fetch(`/api/suggestion/generate?forDate=${forDate}`, { method: 'POST' });
+            if (res.ok) alert("새로운 솔루션이 생성되었습니다!");
+            else alert("분석할 데이터가 부족합니다.");
+        } catch (e) {
+            alert("서버 연결 실패");
+        }
+        btn.innerText = "✨ 내일의 보습 솔루션 받기";
+        btn.disabled = false;
+        loadData();
+    }
+
+    function changeDate(days) {
+        const d = new Date(currentServerDate);
+        d.setDate(d.getDate() + days);
+        currentServerDate = d.toISOString().split('T')[0];
+        loadData();
+    }
+
+    function setDate(val) {
+        currentServerDate = val;
+        loadData();
+    }
+
+    function updateEmoji() {
+        const mood = document.getElementById('mood').value;
+        const emoji = mood >= 5 ? '😄' : mood >= 4 ? '🙂' : mood >= 3 ? '😐' : mood >= 2 ? '☹️' : '😫';
+        document.getElementById('moodEmoji').innerText = emoji;
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+    }
+
+    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+    window.onload = loadData;
+</script>
+</body>
+</html>

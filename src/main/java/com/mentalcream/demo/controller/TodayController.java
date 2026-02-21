@@ -6,6 +6,8 @@ import com.mentalcream.demo.dto.request.AddDoneItemRequest;
 import com.mentalcream.demo.dto.request.UpdateDailyLogRequest;
 import com.mentalcream.demo.dto.response.TodayResponse;
 import com.mentalcream.demo.service.TodayService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
+@Tag(name = "Today Log API", description = "오늘의 활동 및 로그 관리를 위한 API")
 @RestController
 @RequestMapping("/api/today")
 @RequiredArgsConstructor
@@ -22,6 +25,7 @@ public class TodayController {
 
     private final TodayService todayService;
 
+    @Operation(summary = "오늘의 화면 데이터 조회", description = "지정된 날짜의 전체 활동 요약 및 로그를 반환합니다.")
     @GetMapping
     public ResponseEntity<TodayResponse> getTodayScreen(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         LocalDate targetDate = (date != null) ? date : LocalDate.now();

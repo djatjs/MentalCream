@@ -17,7 +17,12 @@ public class PageController {
 
     private final TodayService todayService;
 
-    @GetMapping("/")
+    @GetMapping("/swagger")
+    public String swagger() {
+        return "redirect:/swagger-ui.html";
+    }
+
+    @GetMapping("/today-view")
     public String today(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date, Model model) {
         LocalDate targetDate = (date != null) ? date : LocalDate.now();
         TodayResponse todayScreenData = todayService.getTodayScreen(targetDate);
