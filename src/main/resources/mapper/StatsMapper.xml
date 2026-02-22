@@ -50,4 +50,31 @@
         )
     </select>
 
+    <select id="findBestEnergyBoostingCategory" resultType="string">
+        /* 활동 카테고리별 다음날 에너지 변화량 평균 분석 */
+        SELECT category FROM (
+            SELECT i.category, AVG(l_next.energy - l_curr.energy) as avg_boost
+            FROM done_item i
+            JOIN daily_log l_curr ON i.log_date = l_curr.log_date
+            JOIN daily_log l_next ON i.log_date + 1 = l_next.log_date
+            WHERE i.log_date BETWEEN #{startDate} AND #{endDate}
+            GROUP BY i.category
+            ORDER BY avg_boost DESC
+        ) WHERE ROWNUM = 1
+    </select>
+
+    <select id="calculateWorryReductionRate" resultType="double">
+        /* LEAD 함수를 사용하여 어제와 오늘 고민 강도 차이의 평균 산출 */
+        SELECT NVL(AVG(diff), 0.0)
+        FROM (
+            SELECT 
+                worry_intensity - LEAD(worry_intensity) OVER (ORDER BY log_date DESC) as diff,
+                log_date,
+                LEAD(log_date) OVER (ORDER BY log_date DESC) as prev_date
+            FROM daily_log
+            WHERE log_date BETWEEN #{startDate} AND #{endDate}
+        )
+        WHERE log_date = prev_date + 1
+    </select>
+
 </mapper>

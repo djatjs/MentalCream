@@ -19,7 +19,7 @@ public class GamificationService {
     private final RecoveryIndexCalculator recoveryIndexCalculator;
 
     public LevelDto calculateUserLevel() {
-        // MyBatis + Oracle SQL로 전체 XP 한 번에 계산 (성능 최적화)
+        // MyBatis + Oracle SQL로 전체 XP 한 번에 계산 (사용자가 나뿐이기에 가능한 일)
         long totalXp = statsMapper.calculateTotalXp();
 
         int level = 1;

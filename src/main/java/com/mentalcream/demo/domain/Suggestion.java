@@ -32,7 +32,7 @@ public class Suggestion {
 
     private Integer minutes;
 
-    @Column(length = 200)
+    @Column(length = 1000)
     private String reason;
 
     @Builder.Default

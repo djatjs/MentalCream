@@ -28,10 +28,10 @@ public class RecoveryIndexCalculator {
         double secondHalfAvg = ((Number) metrics.getOrDefault("SECOND_HALF_AVG", firstHalfAvg)).doubleValue();
         long logCount = ((Number) metrics.getOrDefault("LOG_COUNT", 0L)).longValue();
 
-        // 2. 에너지 추세 분석 (전반부 vs 후반부)
+        // 2. 에너지 추세 분석 (전반부와 후반부 비교해서 에너지 회복해서 후반부가 높으면 추가 점수줌)
         double trendBonus = (secondHalfAvg >= firstHalfAvg) ? 15 : 0;
         
-        // 3. 최종 점수 산출
+        // 3. 활동 기준 최종 점수 산출
         int baseScore = (int) (qualityScore * 3);
         int energyScore = (int) (secondHalfAvg * 12); // 5점 만점 기준 (최대 60점)
         long penalty = (7 - logCount) * 12; // 미기록 페널티 강화
