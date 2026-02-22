@@ -19,4 +19,35 @@
         FROM DUAL
     </select>
 
+    <select id="calculateTotalXp" resultType="long">
+        SELECT NVL(SUM(CASE category
+                        WHEN 'LIFE' THEN 5
+                        WHEN 'STUDY' THEN 10
+                        WHEN 'RUN' THEN 15
+                        WHEN 'PROJECT' THEN 20
+                        ELSE 0 END), 0)
+        FROM done_item
+    </select>
+
+    <select id="calculateCurrentStreak" resultType="int">
+        /* 오늘 또는 어제부터 시작하여 끊기지 않은 연속 일수 계산 */
+        WITH RECURSIVE_DATES AS (
+            SELECT MAX(log_date) as last_date
+            FROM done_item
+            WHERE log_date >= #{today} - 1
+        )
+        SELECT COUNT(DISTINCT log_date)
+        FROM done_item
+        WHERE log_date > (
+            SELECT NVL(MAX(d), TO_DATE('1900-01-01', 'YYYY-MM-DD'))
+            FROM (
+                SELECT #{today} - LEVEL + 1 as d
+                FROM DUAL
+                CONNECT BY LEVEL &lt;= 1000 /* 최대 1000일까지만 체크 */
+            ) dates
+            LEFT JOIN (SELECT DISTINCT log_date FROM done_item) items ON dates.d = items.log_date
+            WHERE items.log_date IS NULL AND dates.d &lt;= (SELECT last_date FROM RECURSIVE_DATES)
+        )
+    </select>
+
 </mapper>

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 7일 데이터를 기반으로 0~100점의 회복 지수를 산출하는 엔진
@@ -20,7 +21,7 @@ public class RecoveryIndexCalculator {
         LocalDate weekEnd = weekStart.plusDays(6);
         
         // MyBatis + Oracle Native SQL을 통한 집계 처리 (SM 현업 스타일)
-        java.util.Map<String, Object> metrics = statsMapper.calculateRecoveryMetrics(weekStart, weekEnd);
+        Map<String, Object> metrics = statsMapper.calculateRecoveryMetrics(weekStart, weekEnd);
         
         double qualityScore = ((Number) metrics.getOrDefault("QUALITY_SCORE", 0.0)).doubleValue();
         double firstHalfAvg = ((Number) metrics.getOrDefault("FIRST_HALF_AVG", 5.0)).doubleValue();

@@ -15,17 +15,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GamificationService {
 
-    private final DoneItemRepository doneItemRepository;
+    private final com.mentalcream.demo.repository.StatsMapper statsMapper;
     private final RecoveryIndexCalculator recoveryIndexCalculator;
 
     public LevelDto calculateUserLevel() {
-        List<DoneItem> allItems = doneItemRepository.findAll();
-        long totalXp = allItems.stream()
-                .mapToLong(this::getXpByCategory)
-                .sum();
+        // MyBatis + Oracle SQL로 전체 XP 한 번에 계산 (성능 최적화)
+        long totalXp = statsMapper.calculateTotalXp();
 
         int level = 1;
-        String levelName = "회복자";
+        String levelName = "회복자"; // 명칭 통일
         long nextLevelXp = 100;
 
         if (totalXp >= 1000) { level = 5; levelName = "멘탈관리자"; nextLevelXp = 2000; }
@@ -34,7 +32,7 @@ public class GamificationService {
         else if (totalXp >= 100) { level = 2; levelName = "유지자"; nextLevelXp = 300; }
 
         long prevLevelXp = getPrevLevelXp(level);
-        double progress = (double) (totalXp - prevLevelXp) / (nextLevelXp - prevLevelXp) * 100;
+        double progress = (nextLevelXp == prevLevelXp) ? 100 : (double) (totalXp - prevLevelXp) / (nextLevelXp - prevLevelXp) * 100;
 
         return LevelDto.builder()
                 .level(level)
@@ -42,7 +40,7 @@ public class GamificationService {
                 .currentXp(totalXp)
                 .prevLevelXp(prevLevelXp)
                 .nextLevelXp(nextLevelXp)
-                .progressPercent(Math.min(100, progress))
+                .progressPercent(Math.min(100, Math.max(0, progress)))
                 .build();
     }
 
@@ -59,29 +57,8 @@ public class GamificationService {
     }
 
     public int calculateStreak(LocalDate today) {
-        int streak = 0;
-        LocalDate checkDate = today;
-        while (true) {
-            if (doneItemRepository.findByDailyLog_LogDateBetween(checkDate, checkDate).isEmpty()) {
-                if (checkDate.equals(today)) { // 오늘만 아직 안 적은 경우는 어제부터 체크
-                    checkDate = checkDate.minusDays(1);
-                    continue;
-                }
-                break;
-            }
-            streak++;
-            checkDate = checkDate.minusDays(1);
-        }
-        return streak;
-    }
-
-    private int getXpByCategory(DoneItem item) {
-        return switch (item.getCategory()) {
-            case LIFE -> 5;
-            case STUDY -> 10;
-            case RUN -> 15;
-            case PROJECT -> 20;
-        };
+        // MyBatis + 계층형 쿼리로 연속 기록 한 번에 계산
+        return statsMapper.calculateCurrentStreak(today);
     }
 
     private long getPrevLevelXp(int level) {
