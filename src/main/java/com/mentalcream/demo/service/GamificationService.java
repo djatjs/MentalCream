@@ -1,15 +1,11 @@
 package com.mentalcream.demo.service;
 
-import com.mentalcream.demo.domain.Category;
-import com.mentalcream.demo.domain.DoneItem;
 import com.mentalcream.demo.dto.LevelDto;
-import com.mentalcream.demo.repository.DoneItemRepository;
 import com.mentalcream.demo.service.component.RecoveryIndexCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -18,9 +14,9 @@ public class GamificationService {
     private final com.mentalcream.demo.repository.StatsMapper statsMapper;
     private final RecoveryIndexCalculator recoveryIndexCalculator;
 
-    public LevelDto calculateUserLevel() {
-        // MyBatis + Oracle SQL로 전체 XP 한 번에 계산 (사용자가 나뿐이기에 가능한 일)
-        long totalXp = statsMapper.calculateTotalXp();
+    public LevelDto calculateUserLevel(Long userId) {
+        // MyBatis + Oracle SQL로 현재 사용자의 전체 XP를 한 번에 계산
+        long totalXp = statsMapper.calculateTotalXp(userId);
 
         int level = 1;
         String levelName = "회복자"; // 명칭 통일
@@ -44,8 +40,8 @@ public class GamificationService {
                 .build();
     }
 
-    public String getMentalMode(LocalDate date) {
-        int score = recoveryIndexCalculator.calculateIndex(date.minusDays(7));
+    public String getMentalMode(Long userId, LocalDate date) {
+        int score = recoveryIndexCalculator.calculateIndex(userId, date.minusDays(7));
         return getMentalModeByScore(score);
     }
 
@@ -56,9 +52,9 @@ public class GamificationService {
         return "🧊 냉각 모드";
     }
 
-    public int calculateStreak(LocalDate today) {
+    public int calculateStreak(Long userId, LocalDate today) {
         // MyBatis + 계층형 쿼리로 연속 기록 한 번에 계산
-        return statsMapper.calculateCurrentStreak(today);
+        return statsMapper.calculateCurrentStreak(userId, today);
     }
 
     private long getPrevLevelXp(int level) {

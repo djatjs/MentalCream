@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface SuggestionRepository extends JpaRepository<Suggestion, Long> {
-    java.util.Optional<Suggestion> findByLogDate(java.time.LocalDate logDate);
-    List<Suggestion> findTop3ByLogDateBeforeOrderByLogDateDesc(java.time.LocalDate date);
+    java.util.Optional<Suggestion> findByUser_IdAndLogDate(Long userId, java.time.LocalDate logDate);
+    List<Suggestion> findTop3ByUser_IdAndLogDateBeforeOrderByLogDateDesc(Long userId, java.time.LocalDate date);
 }

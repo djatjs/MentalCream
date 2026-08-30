@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-@Table(name = "done_item", indexes = @Index(name = "idx_log_date", columnList = "log_date"))
+@Table(name = "done_item", indexes = @Index(name = "idx_done_item_daily_log", columnList = "daily_log_id"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,8 +19,8 @@ public class DoneItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "log_date", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "daily_log_id", nullable = false)
     private DailyLog dailyLog;
 
     @Enumerated(EnumType.STRING)

@@ -4,6 +4,7 @@ import com.mentalcream.demo.domain.Category;
 import com.mentalcream.demo.domain.DailyLog;
 import com.mentalcream.demo.domain.DoneItem;
 import com.mentalcream.demo.domain.Suggestion;
+import com.mentalcream.demo.domain.UserAccount;
 import com.mentalcream.demo.dto.DailyLogDto;
 import com.mentalcream.demo.dto.DoneItemDto;
 import com.mentalcream.demo.dto.SuggestionDto;
@@ -15,6 +16,7 @@ import com.mentalcream.demo.repository.DailyLogRepository;
 import com.mentalcream.demo.repository.DoneItemRepository;
 import com.mentalcream.demo.repository.SuggestionRepository;
 import com.mentalcream.demo.service.component.EnergyPatternAnalyzer;
+import com.mentalcream.demo.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,11 +37,13 @@ public class TodayService {
     private final GamificationService gamificationService;
 
     private final EnergyPatternAnalyzer analyzer;
+    private final CurrentUserService currentUserService;
 
     public TodayResponse getTodayScreen(LocalDate date) {
-        DailyLog dailyLog = dailyLogRepository.findByLogDate(date).orElse(null);
+        UserAccount user = currentUserService.requireUser();
+        DailyLog dailyLog = dailyLogRepository.findByUser_IdAndLogDate(user.getId(), date).orElse(null);
         List<DoneItem> doneItems = dailyLog != null ? dailyLog.getDoneItems() : List.of();
-        Suggestion suggestion = suggestionRepository.findByLogDate(date.plusDays(1)).orElse(null);
+        Suggestion suggestion = suggestionRepository.findByUser_IdAndLogDate(user.getId(), date.plusDays(1)).orElse(null);
 
         return TodayResponse.builder()
                 .todayDate(date)
@@ -54,17 +58,18 @@ public class TodayService {
                         .reason(suggestion.getReason())
                         .confidenceScore(suggestion.getConfidenceScore())
                         .build() : null)
-                .levelInfo(gamificationService.calculateUserLevel())
-                .mentalMode(gamificationService.getMentalMode(date))
-                .worryReductionRate(analyzer.calculateWorryReductionRate(date))
-                .streakDays(gamificationService.calculateStreak(date))
+                .levelInfo(gamificationService.calculateUserLevel(user.getId()))
+                .mentalMode(gamificationService.getMentalMode(user.getId(), date))
+                .worryReductionRate(analyzer.calculateWorryReductionRate(user.getId(), date))
+                .streakDays(gamificationService.calculateStreak(user.getId(), date))
                 .build();
     }
 
     @Transactional
     public DailyLogDto upsertDailyLog(LocalDate date, UpdateDailyLogRequest request) {
-        DailyLog dailyLog = dailyLogRepository.findByLogDate(date)
-                .orElseGet(() -> DailyLog.builder().logDate(date).build());
+        UserAccount user = currentUserService.requireUser();
+        DailyLog dailyLog = dailyLogRepository.findByUser_IdAndLogDate(user.getId(), date)
+                .orElseGet(() -> DailyLog.builder().user(user).logDate(date).build());
 
         dailyLog.setMood(request.getMood());
         dailyLog.setEnergy(request.getEnergy());
@@ -79,8 +84,9 @@ public class TodayService {
 
     @Transactional
     public DoneItemDto addDoneItem(LocalDate date, AddDoneItemRequest request) {
-        DailyLog dailyLog = dailyLogRepository.findByLogDate(date)
-                .orElseGet(() -> dailyLogRepository.save(DailyLog.builder().logDate(date).build()));
+        UserAccount user = currentUserService.requireUser();
+        DailyLog dailyLog = dailyLogRepository.findByUser_IdAndLogDate(user.getId(), date)
+                .orElseGet(() -> dailyLogRepository.save(DailyLog.builder().user(user).logDate(date).build()));
 
         DoneItem doneItem = DoneItem.builder()
                 .category(request.getCategory())
@@ -97,7 +103,8 @@ public class TodayService {
 
     @Transactional
     public void deleteDoneItem(Long doneItemId) {
-        if (!doneItemRepository.existsById(doneItemId)) {
+        Long userId = currentUserService.requireUser().getId();
+        if (!doneItemRepository.existsByIdAndDailyLog_User_Id(doneItemId, userId)) {
             throw new ResourceNotFoundException("DoneItem not found with id: " + doneItemId);
         }
         doneItemRepository.deleteById(doneItemId);

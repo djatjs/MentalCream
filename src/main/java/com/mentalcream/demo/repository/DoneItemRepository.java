@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface DoneItemRepository extends JpaRepository<DoneItem, Long> {
-    List<DoneItem> findByDailyLog_LogDateIn(List<LocalDate> dates);
-    List<DoneItem> findByDailyLog_LogDateBetween(LocalDate start, LocalDate end);
+    List<DoneItem> findByDailyLog_User_IdAndDailyLog_LogDateBetween(Long userId, LocalDate start, LocalDate end);
+    boolean existsByIdAndDailyLog_User_Id(Long id, Long userId);
 }

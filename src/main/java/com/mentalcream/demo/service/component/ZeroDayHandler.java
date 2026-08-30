@@ -2,6 +2,7 @@ package com.mentalcream.demo.service.component;
 
 import com.mentalcream.demo.domain.Category;
 import com.mentalcream.demo.domain.Suggestion;
+import com.mentalcream.demo.domain.UserAccount;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -12,8 +13,9 @@ import java.time.LocalDate;
 @Component
 public class ZeroDayHandler {
 
-    public Suggestion createRecoverySuggestion(LocalDate forDate) {
+    public Suggestion createRecoverySuggestion(UserAccount user, LocalDate forDate) {
         return Suggestion.builder()
+                .user(user)
                 .logDate(forDate)
                 .category(Category.LIFE)
                 .title("5분 리셋 액션 (스트레칭 + 물 한 컵)")

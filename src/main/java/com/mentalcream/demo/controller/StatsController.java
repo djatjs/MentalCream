@@ -5,6 +5,7 @@ import com.mentalcream.demo.dto.response.WeeklyStatsResponse;
 import com.mentalcream.demo.service.StatsService;
 import com.mentalcream.demo.service.component.RecoveryIndexCalculator;
 import lombok.RequiredArgsConstructor;
+import com.mentalcream.demo.security.CurrentUserService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,7 @@ public class StatsController {
     private final StatsService statsService;
     private final RecoveryIndexCalculator recoveryIndexCalculator;
     private final com.mentalcream.demo.service.GamificationService gamificationService;
+    private final CurrentUserService currentUserService;
 
     @GetMapping("/weekly")
     public WeeklyStatsResponse getWeeklyStats(
@@ -31,7 +33,8 @@ public class StatsController {
     @GetMapping("/recovery-index")
     public RecoveryIndexResponse getRecoveryIndex(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart) {
-        int score = recoveryIndexCalculator.calculateIndex(weekStart);
+        Long userId = currentUserService.requireUser().getId();
+        int score = recoveryIndexCalculator.calculateIndex(userId, weekStart);
         return RecoveryIndexResponse.builder()
                 .score(score)
                 .status(recoveryIndexCalculator.getStatus(score))

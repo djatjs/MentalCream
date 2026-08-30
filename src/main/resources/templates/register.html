@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 | Mental Cream</title>
+    <style>
+        body { margin:0; min-height:100vh; display:grid; place-items:center; background:#f4f8f7; font-family:Arial,sans-serif; color:#263238; }
+        main { width:min(420px, calc(100% - 40px)); background:#fff; padding:32px; border-radius:20px; box-shadow:0 16px 40px rgba(24,90,80,.12); }
+        h1 { color:#1a8a7e; margin:0 0 8px; } p { color:#607d8b; }
+        label { display:block; margin:16px 0 6px; font-weight:700; }
+        input { width:100%; box-sizing:border-box; padding:13px; border:1px solid #d5dfdc; border-radius:10px; font-size:1rem; }
+        button { width:100%; margin-top:22px; padding:13px; border:0; border-radius:10px; background:#1a8a7e; color:white; font-weight:700; cursor:pointer; }
+        .error { color:#b42318; font-size:.88rem; margin-top:5px; } a { color:#1a8a7e; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>나만의 Mental Cream</h1>
+    <p>계정을 만들면 기록과 AI 추천이 사용자별로 분리됩니다.</p>
+    <form th:action="@{/register}" th:object="${registerRequest}" method="post">
+        <label for="username">아이디</label>
+        <input id="username" th:field="*{username}" autocomplete="username" required>
+        <div class="error" th:errors="*{username}"></div>
+        <label for="displayName">표시 이름</label>
+        <input id="displayName" th:field="*{displayName}" autocomplete="name" required>
+        <div class="error" th:errors="*{displayName}"></div>
+        <label for="password">비밀번호</label>
+        <input id="password" th:field="*{password}" type="password" autocomplete="new-password" required>
+        <div class="error" th:errors="*{password}"></div>
+        <div class="error" th:if="${registerError}" th:text="${registerError}"></div>
+        <button type="submit">회원가입</button>
+    </form>
+    <p>이미 계정이 있나요? <a th:href="@{/login}">로그인</a></p>
+</main>
+</body>
+</html>

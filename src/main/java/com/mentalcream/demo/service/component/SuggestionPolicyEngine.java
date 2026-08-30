@@ -4,7 +4,6 @@ import com.mentalcream.demo.domain.Category;
 import com.mentalcream.demo.domain.Suggestion;
 import com.mentalcream.demo.repository.SuggestionRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -19,8 +18,8 @@ public class SuggestionPolicyEngine {
 
     private final SuggestionRepository suggestionRepository;
 
-    public Category filterRepetition(Category candidate, LocalDate today) {
-        List<Suggestion> history = suggestionRepository.findTop3ByLogDateBeforeOrderByLogDateDesc(today);
+    public Category filterRepetition(Long userId, Category candidate, LocalDate today) {
+        List<Suggestion> history = suggestionRepository.findTop3ByUser_IdAndLogDateBeforeOrderByLogDateDesc(userId, today);
         
         long repeatCount = history.stream()
                 .filter(s -> s.getCategory() == candidate)

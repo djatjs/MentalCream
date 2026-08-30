@@ -17,11 +17,11 @@ public class RecoveryIndexCalculator {
 
     private final com.mentalcream.demo.repository.StatsMapper statsMapper;
 
-    public int calculateIndex(LocalDate weekStart) {
+    public int calculateIndex(Long userId, LocalDate weekStart) {
         LocalDate weekEnd = weekStart.plusDays(6);
         
         // MyBatis + Oracle Native SQL을 통한 집계 처리 (SM 현업 스타일)
-        Map<String, Object> metrics = statsMapper.calculateRecoveryMetrics(weekStart, weekEnd);
+        Map<String, Object> metrics = statsMapper.calculateRecoveryMetrics(userId, weekStart, weekEnd);
         
         double qualityScore = ((Number) metrics.getOrDefault("QUALITY_SCORE", 0.0)).doubleValue();
         double firstHalfAvg = ((Number) metrics.getOrDefault("FIRST_HALF_AVG", 5.0)).doubleValue();

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface DailyLogRepository extends JpaRepository<DailyLog, LocalDate> {
-    Optional<DailyLog> findByLogDate(LocalDate logDate);
-    List<DailyLog> findByLogDateBetween(LocalDate start, LocalDate end);
+public interface DailyLogRepository extends JpaRepository<DailyLog, Long> {
+    Optional<DailyLog> findByUser_IdAndLogDate(Long userId, LocalDate logDate);
+    List<DailyLog> findByUser_IdAndLogDateBetween(Long userId, LocalDate start, LocalDate end);
 }

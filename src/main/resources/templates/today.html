@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>멘탈크림 - 마음을 위한 보습제</title>
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
     <style>
@@ -340,6 +342,15 @@
     }
     updateEmoji();
 
+    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+    function secureHeaders(json = false) {
+        const headers = { [csrfHeader]: csrfToken };
+        if (json) headers['Content-Type'] = 'application/json';
+        return headers;
+    }
+
     async function syncMentalData() {
         const status = document.getElementById('syncStatus');
         status.innerText = '⏳ 동기화 중...';
@@ -354,7 +365,7 @@
 
         const response = await fetch(`/api/today?date=${getCurrentViewDate()}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: secureHeaders(true),
             body: JSON.stringify(data)
         });
 
@@ -371,7 +382,7 @@
         const data = Object.fromEntries(new FormData(e.target).entries());
         const response = await fetch(`/api/today/done?date=${getCurrentViewDate()}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: secureHeaders(true),
             body: JSON.stringify({ category: data.category, title: data.title, minutes: 0, intensity: 1 })
         });
         if (response.ok) location.reload();
@@ -380,7 +391,7 @@
     document.querySelectorAll('.btn-del').forEach(btn => {
         btn.addEventListener('click', async () => {
             if (confirm('삭제하시겠습니까?')) {
-                await fetch(`/api/today/done/${btn.getAttribute('data-id')}`, { method: 'DELETE' });
+                await fetch(`/api/today/done/${btn.getAttribute('data-id')}`, { method: 'DELETE', headers: secureHeaders() });
                 location.reload();
             }
         });
@@ -396,7 +407,7 @@
         dateObj.setDate(dateObj.getDate() + 1);
         const forDate = dateObj.getFullYear() + '-' + String(dateObj.getMonth() + 1).padStart(2, '0') + '-' + String(dateObj.getDate()).padStart(2, '0');
 
-        const response = await fetch(`/api/suggestion/generate?forDate=${forDate}`, { method: 'POST' });
+        const response = await fetch(`/api/suggestion/generate?forDate=${forDate}`, { method: 'POST', headers: secureHeaders() });
         if (response.ok) { alert('보습 솔루션이 도착했습니다!'); location.reload(); }
         else { alert('데이터가 부족합니다.'); btn.innerText = '✨ 다시 받기'; btn.disabled = false; }
     });

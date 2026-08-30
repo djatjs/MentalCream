@@ -11,7 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "daily_log")
+@Table(name = "daily_log",
+        uniqueConstraints = @UniqueConstraint(name = "uk_daily_log_user_date", columnNames = {"user_id", "log_date"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,8 +21,15 @@ import java.util.List;
 public class DailyLog {
 
     @Id
-    @Column(name = "log_date")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "log_date", nullable = false)
     private LocalDate logDate;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserAccount user;
 
     private Integer mood;
 

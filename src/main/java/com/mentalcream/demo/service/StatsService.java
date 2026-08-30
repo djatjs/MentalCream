@@ -5,6 +5,7 @@ import com.mentalcream.demo.domain.DoneItem;
 import com.mentalcream.demo.dto.response.WeeklyStatsResponse;
 import com.mentalcream.demo.repository.DailyLogRepository;
 import com.mentalcream.demo.repository.DoneItemRepository;
+import com.mentalcream.demo.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,12 +23,14 @@ public class StatsService {
 
     private final DailyLogRepository dailyLogRepository;
     private final DoneItemRepository doneItemRepository;
+    private final CurrentUserService currentUserService;
 
     public WeeklyStatsResponse getWeeklyStats(LocalDate weekStart) {
+        Long userId = currentUserService.requireUser().getId();
         LocalDate weekEnd = weekStart.plusDays(6);
 
-        List<DailyLog> logs = dailyLogRepository.findByLogDateBetween(weekStart, weekEnd);
-        List<DoneItem> items = doneItemRepository.findByDailyLog_LogDateBetween(weekStart, weekEnd);
+        List<DailyLog> logs = dailyLogRepository.findByUser_IdAndLogDateBetween(userId, weekStart, weekEnd);
+        List<DoneItem> items = doneItemRepository.findByDailyLog_User_IdAndDailyLog_LogDateBetween(userId, weekStart, weekEnd);
 
         long totalDoneCount = items.size();
 

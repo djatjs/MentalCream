@@ -8,7 +8,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "suggestion")
+@Table(name = "suggestion",
+        uniqueConstraints = @UniqueConstraint(name = "uk_suggestion_user_date", columnNames = {"user_id", "log_date"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,6 +24,10 @@ public class Suggestion {
     @Column(name = "log_date", nullable = false)
     private LocalDate logDate;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserAccount user;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 255)
     private Category category;
@@ -36,6 +41,7 @@ public class Suggestion {
     private String reason;
 
     @Builder.Default
+    @Column(nullable = false)
     private Boolean recoveryFlag = false;
 
     private Integer confidenceScore;

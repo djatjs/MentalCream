@@ -11,11 +11,12 @@
                                 WHEN 'RUN' THEN 1.5
                                 WHEN 'LIFE' THEN 1.0
                                 ELSE 0 END), 0) 
-             FROM done_item 
-             WHERE log_date BETWEEN #{weekStart} AND #{weekEnd}) AS quality_score,
-            (SELECT NVL(AVG(energy), 5.0) FROM daily_log WHERE log_date BETWEEN #{weekStart} AND #{weekStart} + 2) AS first_half_avg,
-            (SELECT NVL(AVG(energy), 5.0) FROM daily_log WHERE log_date BETWEEN #{weekStart} + 3 AND #{weekEnd}) AS second_half_avg,
-            (SELECT COUNT(*) FROM daily_log WHERE log_date BETWEEN #{weekStart} AND #{weekEnd}) AS log_count
+             FROM done_item i
+             JOIN daily_log l ON l.id = i.daily_log_id
+             WHERE l.user_id = #{userId} AND l.log_date BETWEEN #{weekStart} AND #{weekEnd}) AS quality_score,
+            (SELECT NVL(AVG(energy), 5.0) FROM daily_log WHERE user_id = #{userId} AND log_date BETWEEN #{weekStart} AND #{weekStart} + 2) AS first_half_avg,
+            (SELECT NVL(AVG(energy), 5.0) FROM daily_log WHERE user_id = #{userId} AND log_date BETWEEN #{weekStart} + 3 AND #{weekEnd}) AS second_half_avg,
+            (SELECT COUNT(*) FROM daily_log WHERE user_id = #{userId} AND log_date BETWEEN #{weekStart} AND #{weekEnd}) AS log_count
         FROM DUAL
     </select>
 
@@ -26,27 +27,32 @@
                         WHEN 'RUN' THEN 15
                         WHEN 'PROJECT' THEN 20
                         ELSE 0 END), 0)
-        FROM done_item
+        FROM done_item i
+        JOIN daily_log l ON l.id = i.daily_log_id
+        WHERE l.user_id = #{userId}
     </select>
 
     <select id="calculateCurrentStreak" resultType="int">
         /* 오늘 또는 어제부터 시작하여 끊기지 않은 연속 일수 계산 */
-        WITH RECURSIVE_DATES AS (
-            SELECT MAX(log_date) as last_date
-            FROM done_item
-            WHERE log_date >= #{today} - 1
+        WITH activity_dates AS (
+            SELECT DISTINCT l.log_date
+            FROM done_item i
+            JOIN daily_log l ON l.id = i.daily_log_id
+            WHERE l.user_id = #{userId}
+        ), streak_groups AS (
+            SELECT
+                log_date,
+                log_date - ROW_NUMBER() OVER (ORDER BY log_date) AS streak_group,
+                MAX(log_date) OVER () AS latest_date
+            FROM activity_dates
         )
-        SELECT COUNT(DISTINCT log_date)
-        FROM done_item
-        WHERE log_date > (
-            SELECT NVL(MAX(d), TO_DATE('1900-01-01', 'YYYY-MM-DD'))
-            FROM (
-                SELECT #{today} - LEVEL + 1 as d
-                FROM DUAL
-                CONNECT BY LEVEL &lt;= 1000 /* 최대 1000일까지만 체크 */
-            ) dates
-            LEFT JOIN (SELECT DISTINCT log_date FROM done_item) items ON dates.d = items.log_date
-            WHERE items.log_date IS NULL AND dates.d &lt;= (SELECT last_date FROM RECURSIVE_DATES)
+        SELECT COUNT(*)
+        FROM streak_groups
+        WHERE latest_date >= #{today} - 1
+          AND streak_group = (
+            SELECT streak_group
+            FROM streak_groups
+            WHERE log_date = (SELECT MAX(log_date) FROM streak_groups)
         )
     </select>
 
@@ -55,9 +61,9 @@
         SELECT category FROM (
             SELECT i.category, AVG(l_next.energy - l_curr.energy) as avg_boost
             FROM done_item i
-            JOIN daily_log l_curr ON i.log_date = l_curr.log_date
-            JOIN daily_log l_next ON i.log_date + 1 = l_next.log_date
-            WHERE i.log_date BETWEEN #{startDate} AND #{endDate}
+            JOIN daily_log l_curr ON i.daily_log_id = l_curr.id
+            JOIN daily_log l_next ON l_next.user_id = l_curr.user_id AND l_next.log_date = l_curr.log_date + 1
+            WHERE l_curr.user_id = #{userId} AND l_curr.log_date BETWEEN #{startDate} AND #{endDate}
             GROUP BY i.category
             ORDER BY avg_boost DESC
         ) WHERE ROWNUM = 1
@@ -68,11 +74,11 @@
         SELECT NVL(AVG(diff), 0.0)
         FROM (
             SELECT 
-                worry_intensity - LEAD(worry_intensity) OVER (ORDER BY log_date DESC) as diff,
+                LEAD(worry_intensity) OVER (ORDER BY log_date DESC) - worry_intensity as diff,
                 log_date,
                 LEAD(log_date) OVER (ORDER BY log_date DESC) as prev_date
             FROM daily_log
-            WHERE log_date BETWEEN #{startDate} AND #{endDate}
+            WHERE user_id = #{userId} AND log_date BETWEEN #{startDate} AND #{endDate}
         )
         WHERE log_date = prev_date + 1
     </select>

@@ -20,18 +20,18 @@ public class EnergyPatternAnalyzer {
     /**
      * 최근 14일 데이터를 분석하여 다음날 에너지 상승 효과가 가장 컸던 카테고리 추출
      */
-    public Category findBestEnergyBoostingCategory(LocalDate today) {
+    public Category findBestEnergyBoostingCategory(Long userId, LocalDate today) {
         LocalDate startDate = today.minusDays(14);
-        String bestCategory = statsMapper.findBestEnergyBoostingCategory(startDate, today);
+        String bestCategory = statsMapper.findBestEnergyBoostingCategory(userId, startDate, today);
         return bestCategory != null ? Category.valueOf(bestCategory) : null;
     }
 
     /**
      * 최근 14일간의 고민 감소율 평균 산출 (Oracle SQL 윈도우 함수 활용)
      */
-    public double calculateWorryReductionRate(LocalDate today) {
+    public double calculateWorryReductionRate(Long userId, LocalDate today) {
         LocalDate startDate = today.minusDays(14);
-        Double rate = statsMapper.calculateWorryReductionRate(startDate, today);
+        Double rate = statsMapper.calculateWorryReductionRate(userId, startDate, today);
         return rate != null ? rate : 0.0;
     }
 
@@ -46,9 +46,9 @@ public class EnergyPatternAnalyzer {
     /**
      * 데이터 신뢰도 산출
      */
-    public int calculateConfidenceScore(LocalDate today) {
+    public int calculateConfidenceScore(Long userId, LocalDate today) {
         LocalDate fourteenDaysAgo = today.minusDays(14);
-        long recordCount = dailyLogRepository.findByLogDateBetween(fourteenDaysAgo, today).size();
+        long recordCount = dailyLogRepository.findByUser_IdAndLogDateBetween(userId, fourteenDaysAgo, today).size();
         if (recordCount >= 10) return 85;
         if (recordCount >= 5) return 60;
         return 40;

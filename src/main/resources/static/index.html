@@ -111,6 +111,10 @@
 <body>
 
 <div class="container">
+    <div style="display:flex; justify-content:flex-end; align-items:center; gap:12px; margin-bottom:12px;">
+        <span id="currentUserName" style="font-size:.85rem; color:var(--text-label);"></span>
+        <button onclick="logout()" style="border:0; background:transparent; color:var(--mint); font-weight:700; cursor:pointer;">로그아웃</button>
+    </div>
     <header class="header">
         <h1>Mental Cream</h1>
         <div class="date-nav">
@@ -204,6 +208,26 @@
 
 <script>
     let currentServerDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD 안전하게 가져오기
+    let csrfToken = '';
+    let csrfHeader = 'X-CSRF-TOKEN';
+
+    async function loadCurrentUser() {
+        const res = await fetch('/api/auth/me');
+        if (!res.ok) throw new Error('인증 정보를 불러오지 못했습니다.');
+        const user = await res.json();
+        csrfToken = user.csrfToken;
+        csrfHeader = user.csrfHeader;
+        document.getElementById('currentUserName').innerText = `${user.displayName}님의 기록`;
+    }
+
+    function secureHeaders(extra = {}) {
+        return { ...extra, [csrfHeader]: csrfToken };
+    }
+
+    async function logout() {
+        await fetch('/logout', { method: 'POST', headers: secureHeaders() });
+        location.href = '/login?logout';
+    }
 
     async function loadData() {
         document.getElementById('dateDisplay').querySelector('span').innerText = currentServerDate;
@@ -319,7 +343,7 @@
         status.innerText = '⌛ 동기화 중...';
         await fetch(`/api/today?date=${currentServerDate}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: secureHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify(data)
         });
         status.innerText = '✅ 동기화 완료';
@@ -339,7 +363,7 @@
         btn.innerText = "⏳";
         await fetch(`/api/today/done?date=${currentServerDate}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: secureHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify(data)
         });
         document.getElementById('itemTitle').value = "";
@@ -349,7 +373,7 @@
 
     async function deleteItem(id) {
         if (confirm("삭제하시겠습니까?")) {
-            await fetch(`/api/today/done/${id}`, { method: 'DELETE' });
+            await fetch(`/api/today/done/${id}`, { method: 'DELETE', headers: secureHeaders() });
             loadData();
         }
     }
@@ -364,7 +388,7 @@
         const forDate = d.toISOString().split('T')[0];
 
         try {
-            const res = await fetch(`/api/suggestion/generate?forDate=${forDate}`, { method: 'POST' });
+            const res = await fetch(`/api/suggestion/generate?forDate=${forDate}`, { method: 'POST', headers: secureHeaders() });
             if (res.ok) alert("새로운 솔루션이 생성되었습니다!");
             else alert("분석할 데이터가 부족합니다.");
         } catch (e) {
@@ -399,7 +423,10 @@
     }
 
     if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
-    window.onload = loadData;
+    window.onload = async () => {
+        await loadCurrentUser();
+        await loadData();
+    };
 </script>
 </body>
 </html>

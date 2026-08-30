@@ -30,7 +30,7 @@ public class PageController {
         return "today";
     }
 
-    @GetMapping("/stats")
+    @GetMapping({"/stats", "/stats-view"})
     public String stats(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart, Model model) {
         LocalDate start = (weekStart != null) ? weekStart : LocalDate.now().with(java.time.DayOfWeek.MONDAY);
         model.addAttribute("weekStart", start);
